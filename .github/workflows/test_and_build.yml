@@ -1,0 +1,50 @@
+on: [push, pull_request]
+name: test and build
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.31
+  test:
+    strategy:
+      matrix:
+        go-version: [1.15.x]
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+    - name: Install Go
+      if: success()
+      uses: actions/setup-go@v1
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v1
+    - name: Run tests
+      run: go test -v -covermode=count 
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.15.x
+    - name: Checkout code
+      uses: actions/checkout@v1
+    - name: build
+      run: |
+        export GO111MODULE=on
+        GOOS=windows GOARCH=amd64 go build -o bin/magic-home-windows-amd64.exe
+        GOOS=linux   GOARCH=amd64 go build -o bin/magic-home-linux-amd64
+        GOOS=darwin  GOARCH=amd64 go build -o bin/magic-home-darwin-amd64
+    - name: upload artifacts
+      uses: actions/upload-artifact@master
+      with:
+        name: binaries
+        path: bin/
