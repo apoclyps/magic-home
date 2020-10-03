@@ -26,6 +26,7 @@ var deviceCmd = &cobra.Command{
 	},
 }
 
+// device function sets color based on hex and name parameters while validating ip
 func device(ip string, hex string, name string, args []string) {
 	color := lights.GetColor(hex, name)
 
