@@ -31,11 +31,14 @@ func NewScene(devices *[]Device, colors []lights.Color, iterations uint8, delay 
 
 // Play iteratees through a list of colors on all devices with a delay
 // betweeen each colour change.
-func (s Scene) Play() {
+func (s Scene) Play() error {
 	for _, c := range s.colors {
 		for _, d := range *s.devices {
-			d.SetDeviceColor(c)
+			if err := d.SetDeviceColor(c); err != nil {
+				return err
+			}
 			time.Sleep(s.delay)
 		}
 	}
+	return nil
 }

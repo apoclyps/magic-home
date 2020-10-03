@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"net"
-	"os"
 
 	magichome "github.com/apoclyps/magic-home/pkg"
 	"github.com/apoclyps/magic-home/pkg/lights"
@@ -18,28 +17,34 @@ var deviceCmd = &cobra.Command{
 
 	Switch between On/Off device for one or more devices by providing the desired device.
 	`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		ip, _ := cmd.Flags().GetString("ip")
 		hex, _ := cmd.Flags().GetString("hex")
 		color, _ := cmd.Flags().GetString("color")
-		device(ip, hex, color, args)
+		return device(ip, hex, color, args)
 	},
 }
 
-// device function sets color based on hex and name parameters while validating ip
-func device(ip string, hex string, name string, args []string) {
-	color := lights.GetColor(hex, name)
+// device will validate the IP address for a single device (if provided) otherwise
+// defaults to using all devices available on the local network. 
+// The color is set for one or more device's using either an exact match for
+// a hex value or the name of a color preset.
+func device(ip string, hex string, name string, args []string) error {
+	color, err := lights.GetColor(hex, name)
+	if err != nil {
+		return err
+	}
 
 	if ip != "" && !magichome.IsPrivateIpv4(ip) {
-		fmt.Printf("Error while validating ip: %s", ip)
-		os.Exit(1)
+		return fmt.Errorf("error while validating ip: %s", ip)
 	} else if ip != "" {
 		d, err := magichome.NewDevice(net.ParseIP(ip), "", "", "")
 		if err != nil {
-			fmt.Println(err)
-			return
+			return err
 		}
-		d.SetDeviceColor(color)
+		if err := d.SetDeviceColor(color); err != nil {
+			return err
+		}
 	} else {
 		devices, _ := magichome.Discover(magichome.DiscoverOptions{
 			BroadcastAddr: magichome.DEFAULT_BROADCAST_ADDR,
@@ -47,12 +52,15 @@ func device(ip string, hex string, name string, args []string) {
 		})
 
 		for _, device := range *devices {
-			device.SetDeviceColor(color)
+			if err := device.SetDeviceColor(color); err != nil {
+				return err
+			}
 		}
 		if len(*devices) == 0 {
 			fmt.Printf("No devices to turn: on: \n")
 		}
 	}
+	return nil
 }
 
 func init() {

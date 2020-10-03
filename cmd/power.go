@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"net"
-	"os"
 
 	magichome "github.com/apoclyps/magic-home/pkg"
 	"github.com/spf13/cobra"
@@ -17,10 +16,10 @@ var powerCmd = &cobra.Command{
 
 	Switch between On/Off power for one or more devices by providing the desired power.
 	`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		ip, _ := cmd.Flags().GetString("ip")
 
-		var state string = "off"
+		var state = "off"
 		power, _ := cmd.Flags().GetBool("power")
 		if power {
 			state = "on"
@@ -31,12 +30,12 @@ var powerCmd = &cobra.Command{
 			d, err := magichome.NewDevice(net.ParseIP(ip), "", "", "")
 			if err != nil {
 				fmt.Printf("Error configuring device: %s\n", err)
-				os.Exit(1)
+				return err
 			}
 			_, err = d.Power(power)
 			if err != nil {
 				fmt.Printf("Error powering device: %s\n", err)
-				os.Exit(1)
+				return err
 			}
 		} else {
 			devices, _ := magichome.Discover(magichome.DiscoverOptions{
@@ -49,7 +48,7 @@ var powerCmd = &cobra.Command{
 				_, err := device.Power(power)
 				if err != nil {
 					fmt.Printf("Error powering device: %s\n", err)
-					os.Exit(1)
+					return err
 				}
 			}
 			if len(*devices) == 0 {
@@ -58,6 +57,7 @@ var powerCmd = &cobra.Command{
 
 		}
 
+		return nil
 	},
 }
 

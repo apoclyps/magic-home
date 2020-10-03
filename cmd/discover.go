@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	magichome "github.com/apoclyps/magic-home/pkg"
@@ -18,20 +17,20 @@ var discoverCmd = &cobra.Command{
 	Defaults to searching on '255.255.255.255' but can be provided 
 	with a specific broadcast address.
 	`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		broadcastAddr, err := cmd.Flags().GetString("broadcast")
 		if err != nil {
 			fmt.Println(err)
-			return
+			return err
 		}
 		if broadcastAddr == "" {
 			broadcastAddr = magichome.DEFAULT_BROADCAST_ADDR
 		}
-		discover(broadcastAddr)
+		return discover(broadcastAddr)
 	},
 }
 
-func discover(broadcastAddr string) {
+func discover(broadcastAddr string) error {
 	fmt.Print("Discovering ")
 
 	go func() {
@@ -47,7 +46,7 @@ func discover(broadcastAddr string) {
 	})
 	if err != nil {
 		fmt.Println("Error: ", err)
-		os.Exit(1)
+		return err
 	}
 
 	fmt.Print("\n\nDiscovered the following devices:\n\n")
@@ -57,6 +56,7 @@ func discover(broadcastAddr string) {
 	for _, device := range *devices {
 		fmt.Printf("%s\t| %s\t| %s\n", device.IP, device.ID, device.Model)
 	}
+	return nil
 }
 
 func init() {

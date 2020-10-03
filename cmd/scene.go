@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"net"
-	"os"
 	"time"
 
 	magichome "github.com/apoclyps/magic-home/pkg"
@@ -19,10 +18,10 @@ var sceneCmd = &cobra.Command{
 
 	Switch between On/Off scene for one or more scenes by providing the desired scene.
 	`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		ip, _ := cmd.Flags().GetString("ip")
 		color, _ := cmd.Flags().GetString("color")
-		scene(ip, color, args)
+		return scene(ip, color, args)
 	},
 }
 
@@ -52,21 +51,29 @@ func createColorArray(c lights.Color, iterations int) []lights.Color {
 	return arr
 }
 
-func scene(ip string, colorName string, args []string) {
-	c := lights.GetColorByName(colorName)
+func scene(ip string, colorName string, args []string) error {
+	c, err := lights.GetColorByName(colorName)
+	if err != nil {
+		return err
+	}
+
 	colorArray := createColorArray(c, 3)
 
 	if ip != "" && !magichome.IsPrivateIpv4(ip) {
 		fmt.Printf("Error while validating ip: %s", ip)
-		os.Exit(1)
+		return fmt.Errorf("error while validating ip: %s", ip)
 	} else if ip != "" {
 		for _, color := range colorArray {
 			d, err := magichome.NewDevice(net.ParseIP(ip), "", "", "")
 			if err != nil {
 				fmt.Println(err)
-				return
+				return err
 			}
-			d.SetDeviceColor(color)
+
+			if err := d.SetDeviceColor(color); err != nil {
+				return err
+			}
+
 			time.Sleep(100 * time.Millisecond)
 		}
 	} else {
@@ -79,12 +86,15 @@ func scene(ip string, colorName string, args []string) {
 		var delay time.Duration = 250 * time.Millisecond
 
 		s := magichome.NewScene(devices, colorArray, iterations, delay)
-		s.Play()
+		if err := s.Play(); err != nil {
+			return err
+		}
 
 		if len(*devices) == 0 {
 			fmt.Printf("No scenes to turn: on: \n")
 		}
 	}
+	return nil
 }
 
 func init() {

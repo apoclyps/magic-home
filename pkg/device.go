@@ -3,7 +3,6 @@ package magichome
 import (
 	"fmt"
 	"net"
-	"os"
 
 	"github.com/apoclyps/magic-home/pkg/lights"
 )
@@ -65,18 +64,22 @@ func (d *Device) Power(power bool) (*Controller, error) {
 // SetDeviceColor accepts a color, activates the power on that device
 // to ensure it's active, and then set's the device colour. Once a device
 // colour is set, it will remain set until changed or the power is deactivated.
-func (d *Device) SetDeviceColor(c lights.Color) {
+func (d *Device) SetDeviceColor(c lights.Color) error {
 	fmt.Printf("Setting device to %t for %s\n", true, d.IP)
 
 	controller, err := d.Power(true)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 	err = controller.SetColor(c)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
-	controller.Close()
+	if err := controller.Close(); err != nil {
+		fmt.Printf("[WARNING] the controller return an error on closing")
+	}
+
+	return nil
 }
