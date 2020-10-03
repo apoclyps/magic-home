@@ -25,6 +25,10 @@ var deviceCmd = &cobra.Command{
 	},
 }
 
+// device will validate the IP address for a single device (if provided) otherwise
+// defaults to using all devices available on the local network. 
+// The color is set for one or more device's using either an exact match for
+// a hex value or the name of a color preset.
 func device(ip string, hex string, name string, args []string) error {
 	color, err := lights.GetColor(hex, name)
 	if err != nil {
