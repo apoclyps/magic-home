@@ -14,6 +14,10 @@ type invalidColorError struct {
 	msg   string
 }
 
+func (ir *invalidColorError) Error() string {
+	return ir.msg
+}
+
 func reverseMap(m map[string]string) map[string]string {
 	n := make(map[string]string)
 	for k, v := range m {
