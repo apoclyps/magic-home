@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 
 	"gopkg.in/go-playground/colors.v1"
 )
@@ -66,35 +65,36 @@ func lookupPrimaryColor(color string) (*Color, *invalidColorError) {
 	return &c, nil
 }
 
-func GetColorByName(name string) Color {
+func GetColorByName(name string) (Color, error) {
 	if name != "" {
 		cn, _ := lookupColorByName(name)
 		if cn != nil {
-			return *cn
+			return *cn, nil
 		}
 
 		cl, err := lookupPrimaryColor(name)
 		if err != nil {
 			fmt.Println(err)
-			os.Exit(1)
+			return White(), err
 		}
-		return *cl
+		return *cl, nil
 	}
-	return White()
+	return White(), nil
 }
 
-func GetColor(hex string, name string) Color {
-	var color Color
-
+func GetColor(hex string, name string) (color Color, err error) {
 	if hex != "" {
 		color = HexToColor(hex)
-		return color
+		return color, nil
 	}
 
-	color = GetColorByName(name)
+	if color, err = GetColorByName(name); err != nil {
+		return color, err
+	}
+
 	if color != (Color{}) {
-		return color
+		return color, nil
 	}
 
-	return White()
+	return White(), nil
 }
