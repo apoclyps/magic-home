@@ -69,7 +69,11 @@ func scene(ip string, colorName string, args []string) error {
 				fmt.Println(err)
 				return err
 			}
-			d.SetDeviceColor(color)
+
+			if err := d.SetDeviceColor(color); err != nil {
+				return err
+			}
+
 			time.Sleep(100 * time.Millisecond)
 		}
 	} else {
@@ -82,7 +86,9 @@ func scene(ip string, colorName string, args []string) error {
 		var delay time.Duration = 250 * time.Millisecond
 
 		s := magichome.NewScene(devices, colorArray, iterations, delay)
-		s.Play()
+		if err := s.Play(); err != nil {
+			return err
+		}
 
 		if len(*devices) == 0 {
 			fmt.Printf("No scenes to turn: on: \n")
