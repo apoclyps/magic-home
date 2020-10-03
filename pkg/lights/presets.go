@@ -1,13 +1,5 @@
 package lights
 
-// Color represents a RGBW color
-type Color struct {
-	R uint8
-	G uint8
-	B uint8
-	W uint8
-}
-
 // A White light
 func White() Color {
 	return Color{R: 255, G: 255, B: 255, W: 0}

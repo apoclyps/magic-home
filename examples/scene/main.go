@@ -16,7 +16,7 @@ func main() {
 		Timeout:       3,
 	})
 
-	var colorArray = []lights.Color{
+	var colors = []lights.Color{
 		lights.Blue(),
 		lights.Red(),
 		lights.Blue(),
@@ -24,7 +24,7 @@ func main() {
 	var iterations uint8 = 3
 	var delay time.Duration = 250 * time.Millisecond
 
-	s := magichome.NewScene(devices, colorArray, iterations, delay)
+	s := magichome.NewScene(devices, colors, iterations, delay)
 	if err := s.Play(); err != nil {
 		fmt.Printf("Error %+v", err)
 		os.Exit(1)

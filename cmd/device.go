@@ -26,13 +26,30 @@ var deviceCmd = &cobra.Command{
 }
 
 // device will validate the IP address for a single device (if provided) otherwise
-// defaults to using all devices available on the local network. 
+// defaults to using all devices available on the local network.
 // The color is set for one or more device's using either an exact match for
 // a hex value or the name of a color preset.
 func device(ip string, hex string, name string, args []string) error {
-	color, err := lights.GetColor(hex, name)
-	if err != nil {
-		return err
+	var color lights.Color
+
+	if hex != "" {
+		cv, err := lights.NewValue(hex)
+		if err != nil {
+			return err
+		}
+		color, err = cv.GetColorByHex()
+		if err != nil {
+			return err
+		}
+	} else if name != "" {
+		cv, err := lights.NewValue(hex)
+		if err != nil {
+			return err
+		}
+		color, err = cv.GetColorByName()
+		if err != nil {
+			return err
+		}
 	}
 
 	if ip != "" && !magichome.IsPrivateIpv4(ip) {
