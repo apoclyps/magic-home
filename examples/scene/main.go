@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	magichome "github.com/apoclyps/magic-home/pkg"
@@ -23,5 +25,8 @@ func main() {
 	var delay time.Duration = 250 * time.Millisecond
 
 	s := magichome.NewScene(devices, colorArray, iterations, delay)
-	s.Play()
+	if err := s.Play(); err != nil {
+		fmt.Printf("Error %+v", err)
+		os.Exit(1)
+	}
 }
