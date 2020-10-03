@@ -40,4 +40,5 @@ func (s Scene) Play() error {
 			time.Sleep(s.delay)
 		}
 	}
+	return nil
 }
