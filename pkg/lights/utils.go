@@ -14,7 +14,7 @@ type InvalidHexValue struct {
 }
 
 func (err *InvalidHexValue) Error() string {
-	return err.msg
+	return fmt.Sprintf("%s : %s", err.msg, err.value)
 }
 
 func reverseMap(m map[string]string) map[string]string {
@@ -45,7 +45,7 @@ func HexToColor(hex string) (Color, error) {
 		rgba.R,
 		rgba.G,
 		rgba.B,
-		uint8(rgba.A*100),
+		uint8(rgba.A*255),
 	)
 	if err != nil {
 		return color, &InvalidHexValue{hex, "Hex Value is invalid"}
@@ -55,6 +55,7 @@ func HexToColor(hex string) (Color, error) {
 }
 
 func lookupColorByName(color string) (*Color, *InvalidColorError) {
+	// TODO: refactor file read to allow it to be mocked easily
 	content, err := ioutil.ReadFile("colors.min.json")
 
 	if err != nil {
