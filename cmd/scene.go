@@ -25,7 +25,7 @@ var sceneCmd = &cobra.Command{
 	},
 }
 
-func createColorArray(c lights.Color, iterations int) []lights.Color {
+func createColors(c lights.Color, iterations int) ([]lights.Color, error) {
 	var arr []lights.Color
 
 	var r uint8 = c.R
@@ -40,30 +40,41 @@ func createColorArray(c lights.Color, iterations int) []lights.Color {
 	if c.B == 255 {
 		b = c.B - 200
 	}
+	var w uint8 = c.W
 
-	modifiedColor := lights.Color{R: r, G: g, B: b, W: c.W}
+	modifiedColor, err := lights.NewColor(r, g, b, w)
+	if err != nil {
+		return nil, err
+	}
 	for i := 0; i < iterations; i++ {
 		arr = append(arr, c)
 		arr = append(arr, modifiedColor)
 	}
 	arr = append(arr, c)
 
-	return arr
+	return arr, nil
 }
 
-func scene(ip string, colorName string, args []string) error {
-	c, err := lights.GetColorByName(colorName)
+func scene(ip string, name string, args []string) error {
+	cv, err := lights.NewValue(name)
+	if err != nil {
+		return err
+	}
+	c, err := cv.GetColorByName()
 	if err != nil {
 		return err
 	}
 
-	colorArray := createColorArray(c, 3)
+	colors, err := createColors(c, 3)
+	if err != nil {
+		return err
+	}
 
 	if ip != "" && !magichome.IsPrivateIpv4(ip) {
 		fmt.Printf("Error while validating ip: %s", ip)
 		return fmt.Errorf("error while validating ip: %s", ip)
 	} else if ip != "" {
-		for _, color := range colorArray {
+		for _, color := range colors {
 			d, err := magichome.NewDevice(net.ParseIP(ip), "", "", "")
 			if err != nil {
 				fmt.Println(err)
@@ -85,7 +96,7 @@ func scene(ip string, colorName string, args []string) error {
 		var iterations uint8 = 3
 		var delay time.Duration = 250 * time.Millisecond
 
-		s := magichome.NewScene(devices, colorArray, iterations, delay)
+		s := magichome.NewScene(devices, colors, iterations, delay)
 		if err := s.Play(); err != nil {
 			return err
 		}

@@ -8,13 +8,13 @@ import (
 	"gopkg.in/go-playground/colors.v1"
 )
 
-type invalidColorError struct {
-	color string
+type InvalidHexValue struct {
+	value string
 	msg   string
 }
 
-func (ir *invalidColorError) Error() string {
-	return ir.msg
+func (err *InvalidHexValue) Error() string {
+	return fmt.Sprintf("%s : %s", err.msg, err.value)
 }
 
 func reverseMap(m map[string]string) map[string]string {
@@ -29,72 +29,57 @@ func validHexPrefix(hex string) bool {
 	return hex[0] == '#'
 }
 
-func HexToColor(hex string) Color {
+func HexToColor(hex string) (Color, error) {
+	var color Color
+
 	if !validHexPrefix(hex) {
 		hex = "#" + hex
+	} else {
+		return color, &InvalidHexValue{hex, "Hex Value is invalid"}
 	}
 
 	hexColor, _ := colors.ParseHEX(hex)
 	rgba := hexColor.ToRGBA()
-	return Color{R: rgba.R, G: rgba.G, B: rgba.B, W: uint8(rgba.A * 100)}
+
+	color, err := NewColor(
+		rgba.R,
+		rgba.G,
+		rgba.B,
+		uint8(rgba.A*255),
+	)
+	if err != nil {
+		return color, &InvalidHexValue{hex, "Hex Value is invalid"}
+	}
+
+	return color, nil
 }
 
-func lookupColorByName(color string) (*Color, *invalidColorError) {
+func lookupColorByName(color string) (*Color, *InvalidColorError) {
+	// TODO: refactor file read to allow it to be mocked easily
 	content, err := ioutil.ReadFile("colors.min.json")
 
 	if err != nil {
 		fmt.Printf("Error while reading a file %v", err)
 	}
-	var hexMap map[string]string
-	_ = json.Unmarshal(content, &hexMap)
+	var hexes map[string]string
+	_ = json.Unmarshal(content, &hexes)
 
-	colorMap := reverseMap(hexMap)
-	hex, ok := colorMap[string(color)]
+	names := reverseMap(hexes)
+	hex, ok := names[string(color)]
 	if !ok {
-		return nil, &invalidColorError{color, "Color is invalid"}
+		return nil, &InvalidColorError{color, "Color is invalid"}
 	}
-	h := HexToColor(hex)
+	h, err := HexToColor(hex)
+	if err != nil {
+		return nil, &InvalidColorError{color, "Color is invalid"}
+	}
 	return &h, nil
 }
 
-func lookupPrimaryColor(color string) (*Color, *invalidColorError) {
+func lookupPrimaryColor(color string) (*Color, *InvalidColorError) {
 	c, ok := ColorPresets[color]
 	if !ok {
-		return nil, &invalidColorError{color, "Color is invalid"}
+		return nil, &InvalidColorError{color, "Color is invalid"}
 	}
 	return &c, nil
-}
-
-func GetColorByName(name string) (Color, error) {
-	if name != "" {
-		cn, _ := lookupColorByName(name)
-		if cn != nil {
-			return *cn, nil
-		}
-
-		cl, err := lookupPrimaryColor(name)
-		if err != nil {
-			fmt.Println(err)
-			return White(), err
-		}
-		return *cl, nil
-	}
-	return White(), nil
-}
-
-func GetColor(hex string, name string) (color Color, err error) {
-	if hex != "" {
-		color = HexToColor(hex)
-		return color, nil
-	}
-
-	if color, err = GetColorByName(name); err != nil {
-		return color, err
-	}
-
-	if color != (Color{}) {
-		return color, nil
-	}
-
-	return White(), nil
 }
