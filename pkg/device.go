@@ -65,7 +65,7 @@ func (d *Device) Power(power bool) (*Controller, error) {
 // to ensure it's active, and then set's the device colour. Once a device
 // colour is set, it will remain set until changed or the power is deactivated.
 func (d *Device) SetDeviceColor(c lights.Color) error {
-	fmt.Printf("Setting device to %t for %s\n", true, d.IP)
+	fmt.Printf("Setting device color %d for %s\n", c, d.IP)
 
 	controller, err := d.Power(true)
 	if err != nil {
