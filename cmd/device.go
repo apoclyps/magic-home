@@ -42,7 +42,7 @@ func device(ip string, hex string, name string, args []string) error {
 			return err
 		}
 	} else if name != "" {
-		cv, err := lights.NewValue(hex)
+		cv, err := lights.NewValue(name)
 		if err != nil {
 			return err
 		}
