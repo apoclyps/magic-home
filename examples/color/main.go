@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"os"
 	"time"
 
 	magichome "github.com/apoclyps/magic-home/pkg"
@@ -12,17 +13,17 @@ import (
 // Cycle an array of color presets for a device by setting color to each color with a delay between changes.
 func main() {
 	// Create a new Magic Home LED Strip Controller
-	controller, err := magichome.NewController(net.ParseIP("192.168.0.50"), 5577)
+	d, err := magichome.NewDevice(net.ParseIP("192.168.0.50"), "", "", "")
 	if err != nil {
-		fmt.Println("Magic Home Controller Error: ", err)
-		return
+		fmt.Printf("Error configuring device: %s\n", err)
+		os.Exit(1)
 	}
 
-	// Turn LED Strip Controller On
-	err = controller.SetState(magichome.On)
+	// Turn LED Strip Device On
+	_, err = d.Power(true)
 	if err != nil {
-		fmt.Println("Set State Error: ", err)
-		return
+		fmt.Printf("Error powering device: %s\n", err)
+		os.Exit(1)
 	}
 
 	var colors []lights.Color = []lights.Color{
@@ -46,26 +47,19 @@ func main() {
 
 	// Cycle device colors
 	for _, l := range colors {
-		err := controller.SetColor(l)
+		err := d.SetDeviceColor(l)
 		if err != nil {
-			fmt.Println("Error: ", err)
-			return
+			fmt.Println("Error setting device color: ", err)
+			os.Exit(1)
 		}
 
 		time.Sleep(3 * time.Second)
 	}
 
-	// Turn LED Strip Controller off
-	err = controller.SetState(magichome.Off)
+	// Turn LED Strip Device On
+	_, err = d.Power(false)
 	if err != nil {
-		fmt.Println("Set State Error: ", err)
-		return
-	}
-
-	// And finaly close the connection to LED Strip Controller
-	err = controller.Close()
-	if err != nil {
-		fmt.Println("Magic Home Controller Error: ", err)
-		return
+		fmt.Printf("Error powering device: %s\n", err)
+		os.Exit(1)
 	}
 }
