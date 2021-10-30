@@ -1,5 +1,7 @@
 ### Magic Home
 
+![](https://banners.beyondco.de/Magic%20Home.png?theme=light&packageManager=&packageName=go+install+github.com%2Fapoclyps%2Fmagic-home%40latest&pattern=fourPointStars&style=style_2&description=Controlling+your+Magic+Home+LED+light+strips.&md=1&showWatermark=0&fontSize=150px&images=light-bulb)
+
 Magic Home is a CLI & library for controlling RGB LED light strips.
 
 ### CLI Usage
